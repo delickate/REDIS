@@ -1,0 +1,124 @@
+<?php
+try {
+	    $redis = new Redis();
+	    $redis->connect('localhost', 6379);
+	    
+	    /////////////////////////////////////////// SANI: Parse api
+	    $apidata = parseapi("https://DOMAIN_NAME/API/API_METHOD");
+	    
+	    $decodeddata = json_decode($apidata);
+	    
+	    $data2array = convert_object_to_array_recursive($decodeddata);
+	    
+	    print_r($data2array);
+	    
+	    //$redis->hmset('apiresponse', $data2array);
+	    $apidata = $redis->hgetall('apiresponse');
+	    
+	    print_r($apidata);
+	    
+	    /////////////////////////////////////////// SANI: LIST Array
+	    //$redis->lpush("sanilist", "a"); 
+	    //$redis->lpush("sanilist", "b"); 
+	    //$redis->lpush("sanilist", "c");  
+	   
+	    // Get the stored data and print it 
+	    //$arList = $redis->lrange("sanilist", 0 ,5); 
+	    
+	    //print_r($arList);
+	    
+	    //$arList = $redis->keys("*");  //SANI: Get all stored keys
+   		//echo "Stored keys in redis:: " 
+   		//print_r($arList);
+	    
+	    
+	    //////////////////////////////////////////// SANI: Setting value in name
+	    //$redis->set('name', 'Redis is Installed');
+	    //echo $glueStatus = $redis->get('name');  //SANI: Getting value from name
+	    //echo "<br /> Server is running: ".$redis->ping(); 
+
+	} catch (Exception $ex) 
+		{
+		    echo $ex->getMessage();
+		}
+
+
+
+function parseapi($url)
+{
+        $ch = curl_init ($url);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_BINARYTRANSFER,1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(   
+					    'Accept: application/json',
+					    'Content-Type: application/json',
+					    'API-KEY:ASFEWAVSASDVERAFASDFASF')                                                           
+					);   
+		
+        $contents=curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            return curl_error($ch);
+            return "\n<br />";
+            $contents = '';
+        } else {
+            curl_close($ch);
+        }
+
+        if (!is_string($contents) || !strlen($contents)) {
+            return "Failed to get contents.";
+            $contents = '';
+        }
+
+        return $contents;
+}
+
+
+function convert_array_to_obj_recursive($a) 
+{
+    if (is_array($a) ) {
+        foreach($a as $k => $v) {
+            if (is_integer($k)) {
+                // only need this if you want to keep the array indexes separate
+                // from the object notation: eg. $o->{1}
+                $a['index'][$k] = convert_array_to_obj_recursive($v);
+            }
+            else {
+                $a[$k] = convert_array_to_obj_recursive($v);
+            }
+        }
+
+        return (object) $a;
+    }
+
+    // else maintain the type of $a
+    return $a; 
+}
+
+
+function convert_object_to_array_recursive($a) 
+{
+    if (is_array($a) ) 
+    {
+        foreach($a as $k => $v) 
+        {
+            if (is_integer($k)) 
+            {
+                // only need this if you want to keep the array indexes separate
+                // from the object notation: eg. $o->{1}
+                $a['index'][$k] = convert_object_to_array_recursive($v);
+            }
+            else {
+                $a[$k] = convert_object_to_array_recursive($v);
+            }
+        }
+
+        return (array) $a;
+    }
+
+    // else maintain the type of $a
+    return $a; 
+}
+?>
